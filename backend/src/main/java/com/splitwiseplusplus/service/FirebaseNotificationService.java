@@ -54,7 +54,7 @@ public class FirebaseNotificationService {
                 log.debug("FCM sent to user {}: {}", userId, response);
             } catch (FirebaseMessagingException e) {
                 log.warn("FCM failed for token {}: {}", token.substring(0, 10), e.getMessage());
-                if (e.getMessagingErrorCode() == MessagingErrorCode.REGISTRATION_TOKEN_NOT_REGISTERED) {
+                if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED) {
                     deviceTokenRepository.deleteByToken(token);
                 }
             }
