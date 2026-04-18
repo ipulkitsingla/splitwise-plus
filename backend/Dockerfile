@@ -12,7 +12,7 @@ COPY --from=builder /app/target/*.jar app.jar
 RUN mkdir -p /app/uploads/receipts /app/uploads/profiles
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD curl -f http://localhost:8080/api/v1/actuator/health || exit 1
+  CMD sh -c 'curl -f "http://localhost:${PORT:-8080}/api/v1/actuator/health" || exit 1'
 ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-jar", "app.jar"]
