@@ -23,11 +23,11 @@ public class FirebaseNotificationService {
     private final DeviceTokenRepository deviceTokenRepository;
 
     @Value("${app.firebase.enabled:false}")
-    private boolean firebaseEnabled;
+    private String firebaseEnabled;
 
     @Async
     public void sendPushNotification(Long userId, String title, String body) {
-        if (!firebaseEnabled) {
+        if (!isFirebaseEnabled()) {
             log.debug("Firebase disabled — skipping push for user {}", userId);
             return;
         }
@@ -59,5 +59,9 @@ public class FirebaseNotificationService {
                 }
             }
         }
+    }
+
+    private boolean isFirebaseEnabled() {
+        return Boolean.parseBoolean(firebaseEnabled == null ? "false" : firebaseEnabled.trim());
     }
 }

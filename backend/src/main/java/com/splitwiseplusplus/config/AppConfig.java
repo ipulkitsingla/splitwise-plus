@@ -56,7 +56,7 @@ public class AppConfig implements WebMvcConfigurer {
     private String firebaseCredentialsPath;
 
     @Value("${app.firebase.enabled:false}")
-    private boolean firebaseEnabled;
+    private String firebaseEnabled;
 
     /**
      * Serve uploaded files as static resources.
@@ -72,7 +72,7 @@ public class AppConfig implements WebMvcConfigurer {
      */
     @PostConstruct
     public void initializeFirebase() {
-        if (!firebaseEnabled) {
+        if (!isFirebaseEnabled()) {
             log.info("Firebase disabled — skipping initialization");
             return;
         }
@@ -96,5 +96,9 @@ public class AppConfig implements WebMvcConfigurer {
         } catch (IOException e) {
             log.warn("Firebase initialization failed: {}. Push notifications disabled.", e.getMessage());
         }
+    }
+
+    private boolean isFirebaseEnabled() {
+        return Boolean.parseBoolean(firebaseEnabled == null ? "false" : firebaseEnabled.trim());
     }
 }
