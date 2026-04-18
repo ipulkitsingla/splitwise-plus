@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -45,15 +46,15 @@ public class AnalyticsService {
 
         // Total expenses
         BigDecimal totalExpenses = expenses.stream()
-                .map(Expense::getAmountInBaseCurrency)
+                .map(this::resolveExpenseAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Category breakdown
         Map<String, BigDecimal> categoryBreakdown = new LinkedHashMap<>();
         for (Expense e : expenses) {
             categoryBreakdown.merge(
-                    e.getCategory().name(),
-                    e.getAmountInBaseCurrency(),
+                    resolveExpenseCategoryName(e),
+                    resolveExpenseAmount(e),
                     BigDecimal::add
             );
         }
@@ -63,13 +64,13 @@ public class AnalyticsService {
 
         // What user owes vs is owed
         BigDecimal totalOwed = splitRepository.findUnsettledByGroupAndUser(groupId, userId)
-                .stream().map(s -> s.getOwedAmount()).reduce(BigDecimal.ZERO, BigDecimal::add);
+                .stream().map(this::resolveOwedAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalOwe = expenses.stream()
                 .filter(e -> e.getPaidBy().getId().equals(userId))
                 .flatMap(e -> e.getSplits().stream())
                 .filter(s -> !s.isSettled() && !s.getUser().getId().equals(userId))
-                .map(s -> s.getOwedAmount())
+                .map(this::resolveOwedAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Monthly trends
@@ -110,5 +111,37 @@ public class AnalyticsService {
                 .monthlyTrends(trends)
                 .topSpenders(topSpenders)
                 .build();
+    }
+
+    private BigDecimal resolveExpenseAmount(Expense expense) {
+        Object amount = invokeGetter(expense, "getAmountInBaseCurrency");
+        if (amount instanceof BigDecimal) {
+            return (BigDecimal) amount;
+        }
+        amount = invokeGetter(expense, "getAmount");
+        return amount instanceof BigDecimal ? (BigDecimal) amount : BigDecimal.ZERO;
+    }
+
+    private String resolveExpenseCategoryName(Expense expense) {
+        Object category = invokeGetter(expense, "getCategory");
+        return category instanceof Enum<?> ? ((Enum<?>) category).name() : "OTHER";
+    }
+
+    private BigDecimal resolveOwedAmount(Object split) {
+        Object owed = invokeGetter(split, "getOwedAmount");
+        if (owed instanceof BigDecimal) {
+            return (BigDecimal) owed;
+        }
+        owed = invokeGetter(split, "getAmount");
+        return owed instanceof BigDecimal ? (BigDecimal) owed : BigDecimal.ZERO;
+    }
+
+    private Object invokeGetter(Object target, String methodName) {
+        try {
+            Method method = target.getClass().getMethod(methodName);
+            return method.invoke(target);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -189,8 +190,35 @@ public class NotificationService {
                 .type(n.getType())
                 .referenceId(n.getReferenceId())
                 .referenceType(n.getReferenceType())
-                .read(n.isRead())
-                .createdAt(n.getCreatedAt())
+                .read(resolveReadFlag(n))
+                .createdAt(resolveCreatedAt(n))
                 .build();
+    }
+
+    private boolean resolveReadFlag(Notification notification) {
+        Object value = invokeGetter(notification, "isRead");
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        value = invokeGetter(notification, "getRead");
+        return value instanceof Boolean && (Boolean) value;
+    }
+
+    private LocalDateTime resolveCreatedAt(Notification notification) {
+        Object value = invokeGetter(notification, "getCreatedAt");
+        if (value instanceof LocalDateTime) {
+            return (LocalDateTime) value;
+        }
+        value = invokeGetter(notification, "getCreatedOn");
+        return value instanceof LocalDateTime ? (LocalDateTime) value : null;
+    }
+
+    private Object invokeGetter(Object target, String methodName) {
+        try {
+            Method method = target.getClass().getMethod(methodName);
+            return method.invoke(target);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }
