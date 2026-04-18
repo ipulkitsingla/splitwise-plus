@@ -1,5 +1,6 @@
 package com.splitwiseplusplus;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -23,9 +24,21 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableAsync
 @EnableCaching
+@Slf4j
 public class SplitwisePlusApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SplitwisePlusApplication.class, args);
+        try {
+            SpringApplication.run(SplitwisePlusApplication.class, args);
+        } catch (Throwable t) {
+            Throwable root = t;
+            while (root.getCause() != null && root.getCause() != root) {
+                root = root.getCause();
+            }
+            log.error("Fatal startup error: {}", root.getMessage(), t);
+            System.err.println("Fatal startup error: " + root.getClass().getName() + " - " + root.getMessage());
+            t.printStackTrace(System.err);
+            throw t;
+        }
     }
 }
