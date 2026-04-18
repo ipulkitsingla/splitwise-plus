@@ -40,4 +40,9 @@ public class ExpenseSplit {
     @Column(name = "is_settled")
     @Builder.Default
     private boolean settled = false;
+
+    // Explicit getter used by analytics/service code.
+    public BigDecimal getOwedAmount() {
+        return owedAmount;
+    }
 }

@@ -57,6 +57,16 @@ public class Expense {
     @Builder.Default
     private Category category = Category.OTHER;
 
+    // Explicit getters used by analytics/service layer in build environments
+    // where Lombok annotation processing may be inconsistent.
+    public BigDecimal getAmountInBaseCurrency() {
+        return amountInBaseCurrency;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
     @Column(name = "expense_date", nullable = false)
     private LocalDate expenseDate;
 

@@ -54,6 +54,15 @@ public class Notification {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    // Explicit getters used by services to avoid Lombok processing variability in CI builds.
+    public boolean isRead() {
+        return read;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     public enum NotificationType {
         EXPENSE_ADDED, PAYMENT_MADE, PAYMENT_REMINDER,
         GROUP_INVITE, GROUP_UPDATE, MONTHLY_REPORT, INFO
