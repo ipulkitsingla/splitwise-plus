@@ -10,12 +10,12 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -70,7 +70,7 @@ public class AppConfig implements WebMvcConfigurer {
     /**
      * Initialize Firebase Admin SDK if enabled.
      */
-    @Bean
+    @PostConstruct
     public void initializeFirebase() {
         if (!firebaseEnabled) {
             log.info("Firebase disabled — skipping initialization");
